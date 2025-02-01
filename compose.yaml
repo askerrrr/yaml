@@ -1,5 +1,5 @@
 version: "3.9"
-name: app
+name: "app"
 
 services: 
  app: 
@@ -11,6 +11,7 @@ services:
          - /home/app/env_var.js:/app/env_var.js
     environment:
          - MONGO_URL=mongodb://db:27017
+         - HOST=0.0.0.0
     networks:
          - front
          - back
@@ -29,20 +30,34 @@ services:
     image: httpd
     ports: 
          - "80:80"
+         - "443:443"
     volumes:
-         - type: bind
-           source: ./app
-           target: /usr/local/apache2/htdocs/app
-         - type: bind
-           source: /home/app/httpd.conf
-           target: /usr/local/apache2/conf/httpd.conf
+         - ./app:/usr/local/apache2/htdocs/app
+         - /home/app/httpd.conf:/usr/local/apache2/conf/httpd.conf
          - ./logs:/usr/local/apache2/logs
+         - /etc/letsencrypt:/etc/letsencrypt
+    command: >
+      sh -c "httpd -D FOREGROUND"
     networks:
-         - front
+            - front
+    depends_on: 
+         - app
     container_name: apache
-
+    
+ certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+         - /etc/letsencrypt:/etc/letsencrypt
+         - /var/lib/letsencrypt:/var/lib/letsencrypt
+         - /app:/usr/local/apache2/htdocs/app
+    command: certonly --webroot --webroot-path=/usr/local/apache2/htdocs/app -d silk-road-store.ru --email asker_sulanov1999@mail.ru --agree-tos --non-interactive
+    depends_on:
+         -  apache
 volumes:
      mongodb:
 networks:
         front:
+             driver: bridge
         back:
+             driver: bridge
