@@ -8,12 +8,15 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - type: bind
-        source: /home/bot/env.js
-        target: /bot/env.js
+      - /var/lib/docker_app/yaml/env.js:/bot/env.js
     restart: always
     environment:
       - MONGO_URL=mongodb://db:27017
+    depends_on:
+      - db
+    networks: 
+      - back
+
   db:
     container_name: mongodb
     image: mongo
@@ -22,7 +25,12 @@ services:
     volumes:
       - mongodb:/data/db
     restart: always
+    networks:
+      - back
 
 volumes:
   mongodb:
+networks:
+      - back
+           driver: bridge  
 
