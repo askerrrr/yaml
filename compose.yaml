@@ -1,70 +1,80 @@
 name: "app"
 
-services: 
- app: 
-    image: milkydad/app
-    ports: 
-         - "3000:3000"
+services:
+  app:
+    image: milkydad/testapp
+    ports:
+      - "3000:3000"
     restart: always
     volumes:
-         - /home/app/env_var.js:/app/env_var.js
-         - app-data:/app
+      - ./env_var.js:/app/env_var.js
+      - app-data:/app
     environment:
-         - MONGO_URL=mongodb://db:27017
-         - HOST=0.0.0.0
-    networks:
-         - front
-         - back
-    container_name: app
-    depends_on: 
-         - mongodb 
+      - MONGO_HOST=db
+      - MONGO_PORT=38143
+      - HOST=0.0.0.0
+      - MONGO_INITDB_ROOT_USERNAME=
+      - MONGO_INITDB_ROOT_PASSWORD=
 
- mongodb:
+    networks:
+      - front
+      - back
+    container_name: app
+    depends_on:
+      - mongodb
+
+  mongodb:
     image: mongo
     ports:
-         - "27017:27017"
+      - "38143:38143"
     restart: always
+    env_file: [.env-mongo]
     volumes:
-         - mongodb:/data/db
+      - mongodb:/data/db
+      - ./mongod.conf:/etc/mongod.conf
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
     networks:
-         - back
+      - back
+    command: [--auth, --port, "38143"] 
     container_name: db
- 
 
-
- apache:
-    image: httpd
-    ports: 
-         - "80:80"
-       # - "443:443"
+  apache:
+    image: httpd:2.4
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
-         - app-data:/usr/local/apache2/htdocs/app
-         - /home/app/httpd.conf:/usr/local/apache2/conf/httpd.conf
-         - ./logs:/usr/local/apache2/logs
-         - /etc/letsencrypt:/etc/letsencrypt
+      - ./httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./logs:/usr/local/apache2/logs
+      - /etc/letsencrypt:/etc/letsencrypt
+      - app-data:/var/www/app
+      - /etc/timezone:/etc/timezone
     command: >
       sh -c "httpd -D FOREGROUND"
     networks:
-            - front
-    depends_on: 
-         - app
+      - front
     container_name: apache
-    
- certbot:
+    depends_on:
+      - app
+
+  certbot:
     image: certbot/certbot
     container_name: certbot
     volumes:
-         - /etc/letsencrypt:/etc/letsencrypt
-         - /var/lib/letsencrypt:/var/lib/letsencrypt
-         - app-data:/usr/local/apache2/htdocs/app
-    command: certonly --webroot --webroot-path=/usr/local/apache2/htdocs/app -d silk-road-store.ru --email asker_sulanov1999@mail.ru --agree-tos --non-interactive
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+      - app-data:/var/www/app/
+    command: certonly --webroot -w /var/www/app/public/html -d silk-road-store.ru --email asker_sulanov1999@mail.ru --agree-tos --verbose
     depends_on:
-         - apache
+      - apache
+    networks:
+      - front
+
 volumes:
-     mongodb:
-     app-data:
+  mongodb:
+  app-data:
 networks:
-        front:
-             driver: bridge
-        back:
-             driver: bridge
+  front:
+    driver: bridge
+  back:
+    driver: bridge
