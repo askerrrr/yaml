@@ -2,12 +2,14 @@ name: "app"
 
 services:
   app:
-    image: milkydad/testapp
+    image: milkydad/main-app
+    container_name: app
     ports:
       - "3000:3000"
     restart: always
     volumes:
       - ./env_var.js:/app/env_var.js
+      - ./init-mongo.js:/app/init-mongo.js
       - app-data:/app
     environment:
       - MONGO_HOST=db
@@ -15,45 +17,50 @@ services:
       - HOST=0.0.0.0
       - MONGO_INITDB_ROOT_USERNAME=
       - MONGO_INITDB_ROOT_PASSWORD=
-
+      - MONGO_INITDB_DATABASE=appdb
     networks:
       - front
       - back
-    container_name: app
     depends_on:
       - mongodb
 
   mongodb:
     image: mongo
-    ports:
-      - "38143:38143"
+    container_name: db
     restart: always
     env_file: [.env-mongo]
     volumes:
-      - mongodb:/data/db
-      - ./mongod.conf:/etc/mongod.conf
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+      - ./mongod.conf:/etc/mongod.conf
+        #- /var/lib/docker/volumes/app_app-data/_data/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
     networks:
       - back
     command: [--auth, --port, "38143"] 
-    container_name: db
+    environment:
+      - MONGO_ROOT_USER=
+      - MONGO_ROOT_PASSWD=
+      - HASH_LOGIN=
+      - HASH_PASSWD=
+
 
   apache:
     image: httpd:2.4
+    container_name: apache
     ports:
       - "80:80"
       - "443:443"
+    restart: always
     volumes:
       - ./httpd.conf:/usr/local/apache2/conf/httpd.conf
       - ./logs:/usr/local/apache2/logs
       - /etc/letsencrypt:/etc/letsencrypt
       - app-data:/var/www/app
-      - /etc/timezone:/etc/timezone
     command: >
       sh -c "httpd -D FOREGROUND"
     networks:
       - front
-    container_name: apache
     depends_on:
       - app
 
@@ -71,10 +78,9 @@ services:
       - front
 
 volumes:
-  mongodb:
   app-data:
+  mongo-data:
+  mongo-config:
 networks:
   front:
-    driver: bridge
   back:
-    driver: bridge
