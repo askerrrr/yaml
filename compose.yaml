@@ -1,23 +1,20 @@
-name: "app"
-
 services:
   app:
-    image: milkydad/main-app
+    image: app
     container_name: app
     ports:
       - "3000:3000"
     restart: always
     volumes:
       - ./env_var.js:/app/env_var.js
-      - ./init-mongo.js:/app/init-mongo.js
       - app-data:/app
     environment:
       - MONGO_HOST=db
       - MONGO_PORT=38143
       - HOST=0.0.0.0
-      - MONGO_INITDB_ROOT_USERNAME=
-      - MONGO_INITDB_ROOT_PASSWORD=
-      - MONGO_INITDB_DATABASE=appdb
+      - MONGO_INITDB_ROOT_USERNAME=Gilgamesh
+      - MONGO_INITDB_ROOT_PASSWORD=Q9khdcpx
+      - MONGO_INITDB_DATABASE=admin
     networks:
       - front
       - back
@@ -32,18 +29,17 @@ services:
     volumes:
       - mongo-data:/data/db
       - mongo-config:/data/configdb
-      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
-      - ./mongod.conf:/etc/mongod.conf
-        #- /var/lib/docker/volumes/app_app-data/_data/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+      - /var/lib/docker/volumes/app_app-data/_data/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
     networks:
       - back
-    command: [--auth, --port, "38143"] 
+    command: [--auth, --port, "38143"]
     environment:
-      - MONGO_ROOT_USER=
-      - MONGO_ROOT_PASSWD=
-      - HASH_LOGIN=
-      - HASH_PASSWD=
-
+      - MONGO_INITDB_ROOT_USERNAME=Gilgamesh
+      - MONGO_INITDB_ROOT_PASSWORD=Q9khdcpx
+      - MONGO_ROOT_USER=Asker
+      - MONGO_ROOT_PASSWD=Q9khdcpx
+      - HASH_LOGIN=$$argon2id$$v=19$$m=65536,t=3,p=4$$1Fk2sjOdiZd/n5AV+oq+bA$$eNdvvWkKHYsDDjJeZLXbqk+51ghNu16ro+W0QT/0cj0
+      - HASH_PASSWD=$$argon2id$$v=19$$m=65536,t=3,p=4$$VfGKMEoi6a7pPDmuDq9o8A$$jy2omxBZd9YFsrsxSCcEUQzoqC8ksMsW0mitTyo01Vs
 
   apache:
     image: httpd:2.4
@@ -57,6 +53,7 @@ services:
       - ./logs:/usr/local/apache2/logs
       - /etc/letsencrypt:/etc/letsencrypt
       - app-data:/var/www/app
+      - /etc/timezone:/etc/timezone
     command: >
       sh -c "httpd -D FOREGROUND"
     networks:
