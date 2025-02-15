@@ -12,8 +12,8 @@ services:
       - MONGO_HOST=db
       - MONGO_PORT=38143
       - HOST=0.0.0.0
-      - MONGO_INITDB_ROOT_USERNAME=Gilgamesh
-      - MONGO_INITDB_ROOT_PASSWORD=Q9khdcpx
+      - MONGO_INITDB_ROOT_USERNAME=
+      - MONGO_INITDB_ROOT_PASSWORD=
       - MONGO_INITDB_DATABASE=admin
     networks:
       - front
@@ -34,12 +34,12 @@ services:
       - back
     command: [--auth, --port, "38143"]
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=Gilgamesh
-      - MONGO_INITDB_ROOT_PASSWORD=Q9khdcpx
-      - MONGO_ROOT_USER=Asker
-      - MONGO_ROOT_PASSWD=Q9khdcpx
-      - HASH_LOGIN=$$argon2id$$v=19$$m=65536,t=3,p=4$$1Fk2sjOdiZd/n5AV+oq+bA$$eNdvvWkKHYsDDjJeZLXbqk+51ghNu16ro+W0QT/0cj0
-      - HASH_PASSWD=$$argon2id$$v=19$$m=65536,t=3,p=4$$VfGKMEoi6a7pPDmuDq9o8A$$jy2omxBZd9YFsrsxSCcEUQzoqC8ksMsW0mitTyo01Vs
+      - MONGO_INITDB_ROOT_USERNAME=
+      - MONGO_INITDB_ROOT_PASSWORD=
+      - MONGO_ROOT_USER=
+      - MONGO_ROOT_PASSWD=
+      - HASH_LOGIN=
+      - HASH_PASSWD=
 
   apache:
     image: httpd:2.4
